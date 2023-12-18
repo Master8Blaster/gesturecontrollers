@@ -11,7 +11,7 @@ class MediaPLayerBloc extends Bloc<MediaPlayerEvents, MediaPlayerState> {
   GlobalKey<ScaffoldState> keyScaffold = GlobalKey<ScaffoldState>();
   late VideoPlayerController playerController;
   bool isInitialized = false;
-  bool isHorizontal = false;
+  bool isHorizontal = true;
   bool isControlsLocked = false;
   bool isControlsVisible = false;
 
@@ -24,6 +24,8 @@ class MediaPLayerBloc extends Bloc<MediaPlayerEvents, MediaPlayerState> {
           DeviceOrientation.landscapeRight,
           DeviceOrientation.landscapeLeft,
         ]);
+        await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge,
+            overlays: [SystemUiOverlay.top, SystemUiOverlay.bottom]);
         if (!event.isFile) {
           playerController =
               VideoPlayerController.contentUri(Uri.parse(event.path));
@@ -32,6 +34,22 @@ class MediaPLayerBloc extends Bloc<MediaPlayerEvents, MediaPlayerState> {
         }
         await playerController.initialize().then((value) {
           isInitialized = true;
+          if (playerController.value.size.width >
+              playerController.value.size.height) {
+            SystemChrome.setPreferredOrientations([
+              DeviceOrientation.landscapeRight,
+              DeviceOrientation.landscapeLeft,
+            ]);
+          } else {
+            SystemChrome.setPreferredOrientations([
+              DeviceOrientation.portraitUp,
+            ]);
+          }
+          playerController.addListener(() {
+            if (playerController.value.isBuffering) {
+              emit(StateMediaPLayerLoaded());
+            }
+          });
           emit(StateMediaPLayerLoaded());
         });
       } else if (event is EventMediaPlayerPlay) {
@@ -54,6 +72,14 @@ class MediaPLayerBloc extends Bloc<MediaPlayerEvents, MediaPlayerState> {
         emit(StateMediaPLayerLoaded());
         await playerController.play();
         emit(StateMediaPLayerLoaded());
+      } else if (event is EventMediaControlsToggle) {
+        isControlsVisible = !isControlsVisible;
+        if (isControlsVisible) {
+          makeVisibleControllers();
+        } else {
+          makeInVisibleControllers();
+        }
+        emit(StateMediaPLayerLoaded());
       } else if (event is EventMediaPlayerSkipForward10SecOnDoubleTap) {
         emit(StateMediaPLayerLoaded());
       } else if (event is EventMediaPlayerSkipBackWord10SecOnDoubleTap) {
@@ -61,12 +87,13 @@ class MediaPLayerBloc extends Bloc<MediaPlayerEvents, MediaPlayerState> {
       } else if (event is EventMediaPlayerMoveToPIPMode) {
         emit(StateMediaPLayerLoaded());
       } else if (event is EventMediaPlayerLockSettings) {
+        isControlsLocked = !isControlsLocked;
         emit(StateMediaPLayerLoaded());
       } else if (event is EventMediaPlayerChangeAudio) {
         emit(StateMediaPLayerLoaded());
       } else if (event is EventMediaPlayerScreenModeChange) {
         emit(StateMediaPLayerLoaded());
-      }else if (event is EventMediaChangeOrientation) {
+      } else if (event is EventMediaChangeOrientation) {
         if (isHorizontal) {
           SystemChrome.setPreferredOrientations([
             DeviceOrientation.portraitUp,
@@ -82,5 +109,15 @@ class MediaPLayerBloc extends Bloc<MediaPlayerEvents, MediaPlayerState> {
         emit(StateMediaPLayerLoaded());
       }
     });
+  }
+
+  makeVisibleControllers() async {
+    await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge,
+        overlays: [SystemUiOverlay.top, SystemUiOverlay.bottom]);
+  }
+
+  makeInVisibleControllers() async {
+    await SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual,
+        overlays: []);
   }
 }

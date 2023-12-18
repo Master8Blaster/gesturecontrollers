@@ -9,6 +9,10 @@ import 'package:video_player/video_player.dart';
 import 'package:volume_controller/volume_controller.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+  ]);
   runApp(const MyApp());
 }
 
@@ -23,7 +27,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
       ),
-      home: MediaPlayer(),
+      home: const Master(),
     );
   }
 }
@@ -40,12 +44,21 @@ class _MasterState extends State<Master> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(),
-      body: Container(
-        child: const Column(
+      body: SizedBox(
+        width: MediaQuery.of(context).size.width,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Expanded(
-              child: HomeScreen(),
-            ),
+            TextButton(
+                onPressed: () {
+                  Navigator.push(context, MaterialPageRoute(
+                    builder: (context) {
+                      return const MediaPlayer();
+                    },
+                  ));
+                },
+                child: const Text("Next"))
           ],
         ),
       ),
@@ -75,7 +88,7 @@ class _HomeScreenState extends State<HomeScreen> {
   VideoPlayerController controller = VideoPlayerController.networkUrl(Uri.parse(
       "https://vod-progressive.akamaized.net/exp=1698148120~acl=%2Fvimeo-prod-skyfire-std-us%2F01%2F3064%2F18%2F465324323%2F2064061118.mp4~hmac=949d84b089b9840450761fe0829ad480f68d7e5404c3c1ca7b599041e17f2f07/vimeo-prod-skyfire-std-us/01/3064/18/465324323/2064061118.mp4?download=1&amp;filename=pexels-thirdman-5538137+%281080p%29.mp4"));
   bool isVideoPlaying = false;
-  Duration videoDuration = Duration();
+  Duration videoDuration = const Duration();
   double duration = 0.5;
 
   @override
@@ -84,7 +97,6 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     getVolume();
     controller.initialize().then((value) => setState(() {
-          // videoDuration = controller.value.duration;
           controller.play();
           controller.addListener(() {
             setState(() {});

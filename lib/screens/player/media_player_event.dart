@@ -15,6 +15,8 @@ class EventMediaPlayerSkipToNext extends MediaPlayerEvents {}
 
 class EventMediaPlayerSkipToPrevious extends MediaPlayerEvents {}
 
+class EventMediaControlsToggle extends MediaPlayerEvents {}
+
 class EventMediaPlayerSkipForward10SecOnDoubleTap extends MediaPlayerEvents {}
 
 class EventMediaPlayerSkipBackWord10SecOnDoubleTap extends MediaPlayerEvents {}
