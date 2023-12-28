@@ -26,245 +26,275 @@ class _MediaPLayerState extends State<MediaPlayer> {
   bool stretchMode = false;
   int fadeOutAnimationDuration = 500;
 
+  Timer? timer;
+
   @override
   void initState() {
     bloc = MediaPLayerBloc(keyScaffold: _keyScaffold);
     super.initState();
-    bloc.add(
-      EventMediaPlayerInit(
-        isFile: false,
-        path:
-            "https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_30mb.mp4",
-      ),
-    );
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      timer = Timer.periodic(const Duration(milliseconds: 10), (timer) {
+        setState(() {});
+      });
+      bloc.add(
+        EventMediaPlayerInit(
+          isFile: false,
+          path:
+              "https://master8blaster.000webhostapp.com/2675c70c-ba45-4ecd-9d57-13586f13e871%20(1).mp4",
+        ),
+      );
+    });
+  }
+
+  @override
+  void dispose() {
+    if (timer != null) {
+      timer!.cancel();
+    }
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder(
-      bloc: bloc,
-      builder: (context, state) {
-        if (state is StateMediaPLayerLoading) {
-          return const Center(child: CircularProgressIndicator());
-        } else if (state is StateMediaPLayerLoaded) {
-          return Scaffold(
-            key: _keyScaffold,
-            backgroundColor: Colors.transparent,
-            extendBodyBehindAppBar: true,
-            extendBody: true,
-            appBar: AppBar(
+    return Scaffold(
+      key: _keyScaffold,
+      backgroundColor: Colors.black,
+      body: BlocBuilder(
+        bloc: bloc,
+        builder: (context, state) {
+          if (state is StateMediaPLayerLoading) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (state is StateMediaPLayerLoaded) {
+            return Scaffold(
               backgroundColor: Colors.transparent,
-              title: AnimatedOpacity(
-                opacity: bloc.isControlsVisible ? 1.0 : 0.0,
-                duration: Duration(milliseconds: fadeOutAnimationDuration),
-                curve: Curves.easeInOutSine,
-                child: const Text(
-                  "Master_hdbc_choose.mp4",
-                  style: TextStyle(fontSize: 16, color: Colors.white),
+              extendBodyBehindAppBar: true,
+              extendBody: true,
+              appBar: AppBar(
+                backgroundColor: Colors.transparent,
+                title: AnimatedOpacity(
+                  opacity: bloc.isControlsVisible ? 1.0 : 0.0,
+                  duration: Duration(milliseconds: fadeOutAnimationDuration),
+                  curve: Curves.easeInOutSine,
+                  child: const Text(
+                    "Master_hdbc_choose.mp4",
+                    style: TextStyle(fontSize: 16, color: Colors.white),
+                  ),
                 ),
-              ),
-              leading: !bloc.isControlsLocked
-                  ? AnimatedOpacity(
-                      opacity: bloc.isControlsVisible ? 1.0 : 0.0,
-                      duration:
-                          Duration(milliseconds: fadeOutAnimationDuration),
-                      curve: Curves.easeInOutSine,
-                      child: IconButton(
+                leading: !bloc.isControlsLocked
+                    ? AnimatedOpacity(
+                        opacity: bloc.isControlsVisible ? 1.0 : 0.0,
+                        duration:
+                            Duration(milliseconds: fadeOutAnimationDuration),
+                        curve: Curves.easeInOutSine,
+                        child: IconButton(
+                          icon: const Icon(
+                            Icons.arrow_back_rounded,
+                            color: Colors.white,
+                          ),
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                        ),
+                      )
+                    : IconButton(
                         icon: const Icon(
-                          Icons.arrow_back_rounded,
+                          Icons.lock_rounded,
                           color: Colors.white,
                         ),
-                        onPressed: () {
-                          Navigator.pop(context);
+                        onPressed: () async {
+                          bloc.isControlsVisible = true;
+                          await makeVisibleControllers();
+                          bloc.add(EventMediaPlayerLockSettings());
                         },
                       ),
-                    )
-                  : IconButton(
-                      icon: const Icon(
-                        Icons.lock_rounded,
-                        color: Colors.white,
-                      ),
-                      onPressed: () async {
-                        bloc.isControlsVisible = true;
-                        await makeVisibleControllers();
-                        bloc.add(EventMediaPlayerLockSettings());
-                      },
-                    ),
-              titleSpacing: 0,
-            ),
-            body: SizedBox(
-              width: MediaQuery.of(context).size.width,
-              height: MediaQuery.of(context).size.height,
-              child: Stack(
-                fit: StackFit.expand,
-                alignment: Alignment.center,
-                children: [
-                  SizedBox(
-                    width: MediaQuery.of(context).size.width,
-                    height: MediaQuery.of(context).size.height,
-                    child: FittedBox(
-                      clipBehavior: Clip.none,
-                      alignment: Alignment.center,
-                      fit: stretchMode ? BoxFit.cover : BoxFit.contain,
-                      child: SizedBox(
-                        width: bloc.playerController.value.size.width,
-                        height: bloc.playerController.value.size.height,
-                        child: VideoPlayer(bloc.playerController),
+                titleSpacing: 0,
+              ),
+              body: SizedBox(
+                width: MediaQuery.of(context).size.width,
+                height: MediaQuery.of(context).size.height,
+                child: Stack(
+                  fit: StackFit.expand,
+                  alignment: Alignment.center,
+                  children: [
+                    SizedBox(
+                      width: MediaQuery.of(context).size.width,
+                      height: MediaQuery.of(context).size.height,
+                      child: FittedBox(
+                        clipBehavior: Clip.none,
+                        alignment: Alignment.center,
+                        fit: stretchMode ? BoxFit.cover : BoxFit.contain,
+                        child: SizedBox(
+                          width: bloc.playerController.value.size.width,
+                          height: bloc.playerController.value.size.height,
+                          child: VideoPlayer(bloc.playerController),
+                        ),
                       ),
                     ),
-                  ),
-                  SizedBox(
-                    width: MediaQuery.of(context).size.width,
-                    height: MediaQuery.of(context).size.height,
-                    child: CustomGestureDetector(
-                      bloc: bloc,
-                      keyScaffold: _keyScaffold,
-                    ),
-                  ),
-                  SafeArea(
-                    child: AnimatedOpacity(
-                      opacity: bloc.isControlsVisible ? 1.0 : 0.0,
-                      duration:
-                          Duration(milliseconds: fadeOutAnimationDuration),
-                      curve: Curves.easeInOutSine,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8),
-                            decoration: const BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
-                                colors: [
-                                  Color(0x00000000),
-                                  Color(0x66000000),
+                    if (!bloc.isControlsLocked)
+                      SizedBox(
+                        width: MediaQuery.of(context).size.width,
+                        height: MediaQuery.of(context).size.height,
+                        child: CustomGestureDetector(
+                          bloc: bloc,
+                          keyScaffold: _keyScaffold,
+                        ),
+                      ),
+                    SafeArea(
+                      child: AnimatedOpacity(
+                        opacity: bloc.isControlsVisible ? 1.0 : 0.0,
+                        duration:
+                            Duration(milliseconds: fadeOutAnimationDuration),
+                        curve: Curves.easeInOutSine,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            Container(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 8),
+                              decoration: const BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                                    Color(0x00000000),
+                                    Color(0x66000000),
+                                  ],
+                                ),
+                              ),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const SizedBox(height: 10),
+                                  CustomSlider(bloc: bloc),
+                                  Row(
+                                    children: [
+                                      IconButton(
+                                        onPressed: () async {
+                                          await makeInVisibleControllers();
+                                          bloc.isControlsVisible = false;
+                                          await Future.delayed(const Duration(
+                                              milliseconds: 500));
+                                          bloc.add(
+                                              EventMediaPlayerLockSettings());
+                                        },
+                                        icon: const Icon(
+                                          Icons.lock_open_rounded,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                      InkWell(
+                                        onTap: () {
+                                          stretchMode = !stretchMode;
+                                          setState(() {});
+                                        },
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(4),
+                                          child: RotatedBox(
+                                            quarterTurns: stretchMode ? 3 : 0,
+                                            child: Image.asset(
+                                              "assets/pngs/expandIcons.png",
+                                              color: Colors.white,
+                                              height: 20,
+                                              width: 20,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      const Spacer(),
+                                      IconButton(
+                                        onPressed: () {
+                                          bloc.add(
+                                              EventMediaPlayerSkipToPrevious());
+                                        },
+                                        icon: Icon(
+                                          Icons.skip_previous_rounded,
+                                          color: Colors.white,
+                                          size: bloc.isHorizontal ? 36 : 24,
+                                        ),
+                                      ),
+                                      IconButton(
+                                        onPressed: () {
+                                          if (bloc.playerController.value
+                                              .isPlaying) {
+                                            bloc.add(EventMediaPlayerPause());
+                                          } else {
+                                            bloc.add(EventMediaPlayerPlay());
+                                          }
+                                        },
+                                        icon: Icon(
+                                          bloc.playerController.value.isPlaying
+                                              ? Icons.pause_rounded
+                                              : Icons.play_arrow_rounded,
+                                          color: Colors.white,
+                                          size: bloc.isHorizontal ? 48 : 36,
+                                        ),
+                                      ),
+                                      IconButton(
+                                        onPressed: () {
+                                          bloc.add(
+                                              EventMediaPlayerSkipToNext());
+                                        },
+                                        icon: Icon(
+                                          Icons.skip_next_rounded,
+                                          color: Colors.white,
+                                          size: bloc.isHorizontal ? 36 : 24,
+                                        ),
+                                      ),
+                                      if (!bloc.isHorizontal) const Spacer(),
+                                      IconButton(
+                                        onPressed: () {
+                                          bloc.add(
+                                              EventMediaChangeOrientation());
+                                        },
+                                        icon: const Icon(
+                                          Icons.screen_rotation_alt_rounded,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 10),
                                 ],
                               ),
                             ),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const SizedBox(height: 10),
-                                CustomSlider(bloc: bloc),
-                                Row(
-                                  children: [
-                                    IconButton(
-                                      onPressed: () async {
-                                        await makeInVisibleControllers();
-                                        bloc.isControlsVisible = false;
-                                        await Future.delayed(
-                                            const Duration(milliseconds: 500));
-                                        bloc.add(
-                                            EventMediaPlayerLockSettings());
-                                      },
-                                      icon: const Icon(
-                                        Icons.lock_open_rounded,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                    IconButton(
-                                      onPressed: () async {
-                                        stretchMode = !stretchMode;
-                                        setState(() {});
-                                      },
-                                      icon: const Icon(
-                                        Icons.lock_open_rounded,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                    const Spacer(),
-                                    IconButton(
-                                      onPressed: () {
-                                        bloc.add(
-                                            EventMediaPlayerSkipToPrevious());
-                                      },
-                                      icon: Icon(
-                                        Icons.skip_previous_rounded,
-                                        color: Colors.white,
-                                        size: bloc.isHorizontal ? 36 : 24,
-                                      ),
-                                    ),
-                                    IconButton(
-                                      onPressed: () {
-                                        if (bloc
-                                            .playerController.value.isPlaying) {
-                                          bloc.add(EventMediaPlayerPause());
-                                        } else {
-                                          bloc.add(EventMediaPlayerPlay());
-                                        }
-                                      },
-                                      icon: Icon(
-                                        bloc.playerController.value.isPlaying
-                                            ? Icons.pause_rounded
-                                            : Icons.play_arrow_rounded,
-                                        color: Colors.white,
-                                        size: bloc.isHorizontal ? 48 : 36,
-                                      ),
-                                    ),
-                                    IconButton(
-                                      onPressed: () {
-                                        bloc.add(EventMediaPlayerSkipToNext());
-                                      },
-                                      icon: Icon(
-                                        Icons.skip_next_rounded,
-                                        color: Colors.white,
-                                        size: bloc.isHorizontal ? 36 : 24,
-                                      ),
-                                    ),
-                                    if (!bloc.isHorizontal) const Spacer(),
-                                    IconButton(
-                                      onPressed: () {
-                                        bloc.add(EventMediaChangeOrientation());
-                                      },
-                                      icon: const Icon(
-                                        Icons.screen_rotation_alt_rounded,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 10),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  if (bloc.playerController.value.isBuffering)
-                    InkWell(
-                      onTap: () {},
-                      child: Container(
-                        color: Colors.black45,
-                        width: MediaQuery.of(context).size.width,
-                        height: MediaQuery.of(context).size.height,
-                        child: const Center(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              CircularProgressIndicator(),
-                              Text(
-                                "Buffering...",
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              )
-                            ],
-                          ),
+                          ],
                         ),
                       ),
                     ),
-                ],
+                    if (bloc.playerController.value.isBuffering)
+                      InkWell(
+                        onTap: () {},
+                        child: Container(
+                          color: Colors.black45,
+                          width: MediaQuery.of(context).size.width,
+                          height: MediaQuery.of(context).size.height,
+                          child: const Center(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                CircularProgressIndicator(),
+                                Text(
+                                  "Buffering...",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                )
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               ),
-            ),
-          );
-        } else {
-          return Container();
-        }
-      },
+            );
+          } else {
+            return Container();
+          }
+        },
+      ),
     );
   }
 
@@ -289,16 +319,9 @@ class CustomSlider extends StatefulWidget {
 }
 
 class _CustomSliderState extends State<CustomSlider> {
-  Timer? timer;
-
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      timer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
-        setState(() {});
-      });
-    });
   }
 
   String getTwoDigit(int value) {
@@ -314,13 +337,18 @@ class _CustomSliderState extends State<CustomSlider> {
           style: const TextStyle(color: Colors.white),
         ),
         Expanded(
-          child: SizedBox(
-            height: 2,
+          child: SliderTheme(
+            data: SliderTheme.of(context).copyWith(
+              inactiveTrackColor: Colors.white30,
+              activeTrackColor: Theme.of(context).primaryColor,
+              thumbColor: Theme.of(context).primaryColor,
+              overlayColor: Theme.of(context).primaryColor.withAlpha(5),
+              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
+              overlayShape: const RoundSliderOverlayShape(overlayRadius: 15),
+              trackHeight: 2,
+            ),
             child: Slider(
               min: 0,
-              thumbColor: Theme.of(context).primaryColor,
-              activeColor: Theme.of(context).primaryColor,
-              secondaryActiveColor: Colors.white,
               max: widget.bloc.playerController.value.duration.inMilliseconds
                   .toDouble(),
               value: widget.bloc.playerController.value.position.inMilliseconds
@@ -341,9 +369,6 @@ class _CustomSliderState extends State<CustomSlider> {
 
   @override
   void dispose() {
-    if (timer != null) {
-      timer!.cancel();
-    }
     super.dispose();
   }
 }
@@ -377,6 +402,9 @@ class _CustomGestureDetectorState extends State<CustomGestureDetector> {
   double previousSlideSkip = 0.5;
   double ySlideSkip = 0.0;
 
+  bool toggleForwardAnimation = false;
+  bool toggleBackWordAnimation = false;
+
   void onTap() {
     if (!widget.bloc.isControlsLocked &&
         widget.keyScaffold.currentState != null) {
@@ -388,12 +416,13 @@ class _CustomGestureDetectorState extends State<CustomGestureDetector> {
     ySlideSkip = data.globalPosition.dx;
     seek =
         widget.bloc.playerController.value.position.inMilliseconds.toDouble();
+    setState(() {});
   }
 
   void onHorizontalDragUpdate(data) {
     double d =
         previousSlideSkip + ((data.globalPosition.dx - ySlideSkip) / 100);
-    print("D : $d");
+    // print("D : $d");
     if (d > 0 &&
         d < widget.bloc.playerController.value.duration.inMilliseconds) {
       seek = d;
@@ -404,7 +433,6 @@ class _CustomGestureDetectorState extends State<CustomGestureDetector> {
           widget.bloc.playerController.value.duration.inMilliseconds.toDouble();
     }
 
-    print("seek : $seek");
     widget.bloc.playerController
         .seekTo(Duration(milliseconds: (seek * 5000).toInt()));
     setState(() {});
@@ -412,6 +440,22 @@ class _CustomGestureDetectorState extends State<CustomGestureDetector> {
 
   void onHorizontalDragEnd(data) {
     previousSlideSkip = seek;
+    setState(() {});
+  }
+
+  startTimerToDismissAnimation({required bool isForward}) async {
+    if (isForward) {
+      toggleForwardAnimation = true;
+      setState(() {});
+      await Future.delayed(const Duration(seconds: 1));
+      toggleForwardAnimation = false;
+    } else {
+      toggleBackWordAnimation = true;
+      setState(() {});
+      await Future.delayed(const Duration(seconds: 1));
+      toggleBackWordAnimation = false;
+    }
+    setState(() {});
   }
 
   @override
@@ -438,6 +482,15 @@ class _CustomGestureDetectorState extends State<CustomGestureDetector> {
         children: [
           Expanded(
             child: GestureDetector(
+              onTap: onTap,
+              onDoubleTap: () {
+                if (!widget.bloc.isControlsLocked &&
+                    widget.keyScaffold.currentState != null) {
+                  startTimerToDismissAnimation(isForward: false);
+                  widget.bloc
+                      .add(EventMediaPlayerSkipBackWord10SecOnDoubleTap());
+                }
+              },
               onVerticalDragStart: (data) {
                 yBrightness = data.globalPosition.dy;
                 setState(() {
@@ -468,58 +521,72 @@ class _CustomGestureDetectorState extends State<CustomGestureDetector> {
               onHorizontalDragStart: onHorizontalDragStart,
               onHorizontalDragUpdate: onHorizontalDragUpdate,
               onHorizontalDragEnd: onHorizontalDragEnd,
-              onTap: onTap,
               child: Container(
                 color: Colors.transparent,
                 padding: const EdgeInsets.only(left: 50),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: AnimatedOpacity(
-                    opacity: isDraggingVolume ? 1 : 0,
-                    duration: const Duration(milliseconds: 500),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        SizedBox(
-                          width: 36,
-                          child: Text(
-                            (volume * 100).toInt().toString(),
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: AnimatedOpacity(
+                        opacity: isDraggingVolume ? 1 : 0,
+                        duration: const Duration(milliseconds: 500),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            SizedBox(
+                              width: 36,
+                              child: Text(
+                                (volume * 100).toInt().toString(),
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                ),
+                              ),
                             ),
-                          ),
+                            const SizedBox(height: 10),
+                            SizedBox(
+                              height: 100,
+                              child: FAProgressBar(
+                                size: 5,
+                                direction: Axis.vertical,
+                                animatedDuration:
+                                    const Duration(milliseconds: 100),
+                                currentValue: volume * 100,
+                                backgroundColor: Colors.white38,
+                                borderRadius: BorderRadius.circular(2),
+                                formatValue: (value, fixed) {
+                                  return (volume * 10).toInt().toString();
+                                },
+                                formatValueFixed: 100,
+                                progressColor: Colors.lightBlueAccent,
+                                changeProgressColor: Colors.lightBlueAccent,
+                                maxValue: 100,
+                                verticalDirection: VerticalDirection.up,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            const Icon(
+                              Icons.volume_up_rounded,
+                              color: Colors.white,
+                              size: 16,
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 10),
-                        SizedBox(
-                          height: 100,
-                          child: FAProgressBar(
-                            size: 5,
-                            direction: Axis.vertical,
-                            animatedDuration: const Duration(milliseconds: 100),
-                            currentValue: volume * 100,
-                            backgroundColor: Colors.white38,
-                            borderRadius: BorderRadius.circular(2),
-                            formatValue: (value, fixed) {
-                              return (volume * 10).toInt().toString();
-                            },
-                            formatValueFixed: 100,
-                            progressColor: Colors.lightBlueAccent,
-                            changeProgressColor: Colors.lightBlueAccent,
-                            maxValue: 100,
-                            verticalDirection: VerticalDirection.up,
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        const Icon(
-                          Icons.volume_up_rounded,
-                          color: Colors.white,
-                          size: 16,
-                        ),
-                      ],
+                      ),
                     ),
-                  ),
+                    AnimatedOpacity(
+                      opacity: toggleBackWordAnimation ? 1 : 0,
+                      duration: const Duration(milliseconds: 500),
+                      child: const Icon(
+                        Icons.replay_10_rounded,
+                        color: Colors.white,
+                        size: 48,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -556,58 +623,81 @@ class _CustomGestureDetectorState extends State<CustomGestureDetector> {
               onHorizontalDragStart: onHorizontalDragStart,
               onHorizontalDragUpdate: onHorizontalDragUpdate,
               onHorizontalDragEnd: onHorizontalDragEnd,
+              onDoubleTap: () {
+                if (!widget.bloc.isControlsLocked &&
+                    widget.keyScaffold.currentState != null) {
+                  startTimerToDismissAnimation(isForward: true);
+                  widget.bloc
+                      .add(EventMediaPlayerSkipForward10SecOnDoubleTap());
+                }
+              },
               onTap: onTap,
               child: Container(
                 color: Colors.transparent,
                 padding: const EdgeInsets.only(right: 50),
-                child: Align(
-                  alignment: Alignment.centerRight,
-                  child: AnimatedOpacity(
-                    opacity: isDraggingBrightness ? 1 : 0,
-                    duration: const Duration(milliseconds: 500),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        SizedBox(
-                          width: 36,
-                          child: Text(
-                            (brightness * 100).toInt().toString(),
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: AnimatedOpacity(
+                        opacity: isDraggingBrightness ? 1 : 0,
+                        duration: const Duration(milliseconds: 300),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            SizedBox(
+                              width: 36,
+                              child: Text(
+                                (brightness * 100).toInt().toString(),
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                ),
+                              ),
                             ),
-                          ),
+                            const SizedBox(height: 10),
+                            SizedBox(
+                              height: 100,
+                              child: FAProgressBar(
+                                size: 5,
+                                direction: Axis.vertical,
+                                animatedDuration:
+                                    const Duration(milliseconds: 100),
+                                currentValue: brightness * 100,
+                                backgroundColor: Colors.white38,
+                                borderRadius: BorderRadius.circular(2),
+                                formatValue: (value, fixed) {
+                                  return (brightness * 10).toInt().toString();
+                                },
+                                formatValueFixed: 100,
+                                progressColor: Colors.lightBlueAccent,
+                                changeProgressColor: Colors.lightBlueAccent,
+                                maxValue: 100,
+                                verticalDirection: VerticalDirection.up,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            const Icon(
+                              Icons.brightness_6_rounded,
+                              color: Colors.white,
+                              size: 16,
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 10),
-                        SizedBox(
-                          height: 100,
-                          child: FAProgressBar(
-                            size: 5,
-                            direction: Axis.vertical,
-                            animatedDuration: const Duration(milliseconds: 100),
-                            currentValue: brightness * 100,
-                            backgroundColor: Colors.white38,
-                            borderRadius: BorderRadius.circular(2),
-                            formatValue: (value, fixed) {
-                              return (brightness * 10).toInt().toString();
-                            },
-                            formatValueFixed: 100,
-                            progressColor: Colors.lightBlueAccent,
-                            changeProgressColor: Colors.lightBlueAccent,
-                            maxValue: 100,
-                            verticalDirection: VerticalDirection.up,
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        const Icon(
-                          Icons.brightness_6_rounded,
-                          color: Colors.white,
-                          size: 16,
-                        ),
-                      ],
+                      ),
                     ),
-                  ),
+                    AnimatedOpacity(
+                      opacity: toggleForwardAnimation ? 1 : 0,
+                      duration: const Duration(milliseconds: 500),
+                      child: const Icon(
+                        Icons.forward_10_rounded,
+                        color: Colors.white,
+                        size: 48,
+                      ),
+                    ),
+                  ],
                 ),
               ),
               /* child: Container(

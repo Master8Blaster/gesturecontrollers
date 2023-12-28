@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -6,6 +7,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gesturecontrollers/screens/player/media_player_event.dart';
 import 'package:gesturecontrollers/screens/player/media_player_stats.dart';
 import 'package:video_player/video_player.dart';
+
+import '../../unitlity/GloableMethods.dart';
 
 class MediaPLayerBloc extends Bloc<MediaPlayerEvents, MediaPlayerState> {
   GlobalKey<ScaffoldState> keyScaffold = GlobalKey<ScaffoldState>();
@@ -32,26 +35,67 @@ class MediaPLayerBloc extends Bloc<MediaPlayerEvents, MediaPlayerState> {
         } else {
           playerController = VideoPlayerController.file(File(event.path));
         }
-        await playerController.initialize().then((value) {
-          isInitialized = true;
-          if (playerController.value.size.width >
-              playerController.value.size.height) {
-            SystemChrome.setPreferredOrientations([
-              DeviceOrientation.landscapeRight,
-              DeviceOrientation.landscapeLeft,
-            ]);
-          } else {
-            SystemChrome.setPreferredOrientations([
-              DeviceOrientation.portraitUp,
-            ]);
-          }
-          playerController.addListener(() {
-            if (playerController.value.isBuffering) {
-              emit(StateMediaPLayerLoaded());
+        if (!event.isFile
+            ? await isInterConnected()
+            : await File(event.path).exists()) {
+          await playerController.initialize().then((value) {
+            isInitialized = true;
+            if (playerController.value.size.width >
+                playerController.value.size.height) {
+              SystemChrome.setPreferredOrientations([
+                DeviceOrientation.landscapeRight,
+                DeviceOrientation.landscapeLeft,
+              ]);
+            } else {
+              SystemChrome.setPreferredOrientations([
+                DeviceOrientation.portraitUp,
+              ]);
             }
+            isControlsVisible = true;
+            playerController.play();
+            playerController.addListener(() {
+              if (playerController.value.isBuffering) {
+                emit(StateMediaPLayerLoaded());
+              }
+            });
+            emit(StateMediaPLayerLoaded());
           });
-          emit(StateMediaPLayerLoaded());
-        });
+        } else {
+          if (!event.isFile) {
+            print("else");
+            showSnackBarWithText(keyScaffold.currentState, "No Internet!");
+            Timer.periodic(const Duration(seconds: 1), (timer) async {
+              if (await isInterConnected()) {
+                timer.cancel();
+                showSnackBarWithText(
+                    keyScaffold.currentState, "Welcome Back To Online.");
+                await playerController.initialize().then((value) async {
+                  isInitialized = true;
+                  isControlsVisible = true;
+                  if (playerController.value.size.width >
+                      playerController.value.size.height) {
+                    SystemChrome.setPreferredOrientations([
+                      DeviceOrientation.landscapeRight,
+                      DeviceOrientation.landscapeLeft,
+                    ]);
+                  } else {
+                    SystemChrome.setPreferredOrientations([
+                      DeviceOrientation.portraitUp,
+                    ]);
+                  }
+                  onEvent(EventMediaPlayerPlay());
+                  playerController.addListener(() {
+                    if (playerController.value.isBuffering) {
+                      emit(StateMediaPLayerLoaded());
+                    }
+                  });
+
+                  emit(StateMediaPLayerLoaded());
+                });
+              }
+            });
+          }
+        }
       } else if (event is EventMediaPlayerPlay) {
         if (playerController.value.isInitialized) {
           await playerController.play();
@@ -81,8 +125,28 @@ class MediaPLayerBloc extends Bloc<MediaPlayerEvents, MediaPlayerState> {
         }
         emit(StateMediaPLayerLoaded());
       } else if (event is EventMediaPlayerSkipForward10SecOnDoubleTap) {
+        if ((playerController.value.position.inMilliseconds +
+                const Duration(seconds: 10).inMilliseconds) <
+            playerController.value.duration.inMilliseconds) {
+          playerController.seekTo(Duration(
+              milliseconds: playerController.value.position.inMilliseconds +
+                  const Duration(seconds: 10).inMilliseconds));
+        } else {
+          playerController.seekTo(Duration(
+              milliseconds: playerController.value.duration.inMilliseconds));
+        }
         emit(StateMediaPLayerLoaded());
       } else if (event is EventMediaPlayerSkipBackWord10SecOnDoubleTap) {
+        if ((playerController.value.position.inMilliseconds -
+                const Duration(seconds: 10).inMilliseconds) >
+            0) {
+          await playerController.seekTo(Duration(
+              milliseconds: playerController.value.position.inMilliseconds -
+                  const Duration(seconds: 10).inMilliseconds));
+        } else {
+          await playerController.seekTo(const Duration(milliseconds: 0));
+        }
+        // emit(StateMediaPLayerLoaded());
         emit(StateMediaPLayerLoaded());
       } else if (event is EventMediaPlayerMoveToPIPMode) {
         emit(StateMediaPLayerLoaded());
