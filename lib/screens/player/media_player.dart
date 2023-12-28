@@ -532,48 +532,55 @@ class _CustomGestureDetectorState extends State<CustomGestureDetector> {
                       child: AnimatedOpacity(
                         opacity: isDraggingVolume ? 1 : 0,
                         duration: const Duration(milliseconds: 500),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            SizedBox(
-                              width: 36,
-                              child: Text(
-                                (volume * 100).toInt().toString(),
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 15),
+                          decoration: BoxDecoration(
+                            color: Colors.black38,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              SizedBox(
+                                width: 36,
+                                child: Text(
+                                  (volume * 100).toInt().toString(),
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                  ),
                                 ),
                               ),
-                            ),
-                            const SizedBox(height: 10),
-                            SizedBox(
-                              height: 100,
-                              child: FAProgressBar(
-                                size: 5,
-                                direction: Axis.vertical,
-                                animatedDuration:
-                                    const Duration(milliseconds: 100),
-                                currentValue: volume * 100,
-                                backgroundColor: Colors.white38,
-                                borderRadius: BorderRadius.circular(2),
-                                formatValue: (value, fixed) {
-                                  return (volume * 10).toInt().toString();
-                                },
-                                formatValueFixed: 100,
-                                progressColor: Colors.lightBlueAccent,
-                                changeProgressColor: Colors.lightBlueAccent,
-                                maxValue: 100,
-                                verticalDirection: VerticalDirection.up,
+                              const SizedBox(height: 10),
+                              SizedBox(
+                                height: 100,
+                                child: FAProgressBar(
+                                  size: 3,
+                                  direction: Axis.vertical,
+                                  animatedDuration:
+                                      const Duration(milliseconds: 100),
+                                  currentValue: volume * 100,
+                                  backgroundColor: Colors.white38,
+                                  borderRadius: BorderRadius.circular(2),
+                                  formatValue: (value, fixed) {
+                                    return (volume * 10).toInt().toString();
+                                  },
+                                  formatValueFixed: 100,
+                                  progressColor: Colors.lightBlueAccent,
+                                  changeProgressColor: Colors.lightBlueAccent,
+                                  maxValue: 100,
+                                  verticalDirection: VerticalDirection.up,
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 10),
-                            const Icon(
-                              Icons.volume_up_rounded,
-                              color: Colors.white,
-                              size: 16,
-                            ),
-                          ],
+                              const SizedBox(height: 10),
+                              const Icon(
+                                Icons.volume_up_rounded,
+                                color: Colors.white,
+                                size: 16,
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -610,7 +617,7 @@ class _CustomGestureDetectorState extends State<CustomGestureDetector> {
                   volume = 1;
                 }
                 print(volume);
-                VolumeController().setVolume(volume);
+                VolumeController().setVolume(volume, showSystemUI: false);
 
                 setState(() {});
               },
@@ -643,48 +650,56 @@ class _CustomGestureDetectorState extends State<CustomGestureDetector> {
                       child: AnimatedOpacity(
                         opacity: isDraggingBrightness ? 1 : 0,
                         duration: const Duration(milliseconds: 300),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            SizedBox(
-                              width: 36,
-                              child: Text(
-                                (brightness * 100).toInt().toString(),
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 15),
+                          decoration: BoxDecoration(
+                            color: Colors.black38,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              SizedBox(
+                                width: 36,
+                                child: Text(
+                                  (brightness * 100).toInt().toString(),
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                  ),
                                 ),
                               ),
-                            ),
-                            const SizedBox(height: 10),
-                            SizedBox(
-                              height: 100,
-                              child: FAProgressBar(
-                                size: 5,
-                                direction: Axis.vertical,
-                                animatedDuration:
-                                    const Duration(milliseconds: 100),
-                                currentValue: brightness * 100,
-                                backgroundColor: Colors.white38,
-                                borderRadius: BorderRadius.circular(2),
-                                formatValue: (value, fixed) {
-                                  return (brightness * 10).toInt().toString();
-                                },
-                                formatValueFixed: 100,
-                                progressColor: Colors.lightBlueAccent,
-                                changeProgressColor: Colors.lightBlueAccent,
-                                maxValue: 100,
-                                verticalDirection: VerticalDirection.up,
+                              const SizedBox(height: 10),
+                              SizedBox(
+                                height: 100,
+                                child: FAProgressBar(
+                                  size: 3,
+                                  direction: Axis.vertical,
+                                  animatedDuration:
+                                      const Duration(milliseconds: 100),
+                                  currentValue: brightness * 100,
+                                  backgroundColor: Colors.white38,
+                                  borderRadius: BorderRadius.circular(2),
+                                  formatValue: (value, fixed) {
+                                    return (brightness * 10).toInt().toString();
+                                  },
+                                  formatValueFixed: 100,
+                                  progressColor: Colors.lightBlueAccent,
+                                  changeProgressColor: Colors.lightBlueAccent,
+                                  maxValue: 100,
+                                  verticalDirection: VerticalDirection.up,
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 10),
-                            const Icon(
-                              Icons.brightness_6_rounded,
-                              color: Colors.white,
-                              size: 16,
-                            ),
-                          ],
+                              const SizedBox(height: 10),
+                              const Icon(
+                                Icons.brightness_6_rounded,
+                                color: Colors.white,
+                                size: 16,
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
