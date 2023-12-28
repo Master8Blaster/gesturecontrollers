@@ -1,12 +1,13 @@
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:encrypt/encrypt.dart' as encrypt;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_animation_progress_bar/flutter_animation_progress_bar.dart';
 import 'package:gesturecontrollers/screens/player/media_player.dart';
-import 'package:screen_brightness/screen_brightness.dart';
-// import 'package:video_player/video_player.dart';
-
-// import 'package:video_player/video_player.dart';
-import 'package:volume_controller/volume_controller.dart';
+import 'package:gesturecontrollers/unitlity/GloableMethods.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -40,9 +41,12 @@ class Master extends StatefulWidget {
 }
 
 class _MasterState extends State<Master> {
+  final GlobalKey<ScaffoldState> _keyScaffold = GlobalKey<ScaffoldState>();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _keyScaffold,
       appBar: AppBar(),
       body: SizedBox(
         width: MediaQuery.of(context).size.width,
@@ -51,14 +55,49 @@ class _MasterState extends State<Master> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             TextButton(
-                onPressed: () {
-                  Navigator.push(context, MaterialPageRoute(
-                    builder: (context) {
-                      return const MediaPlayer();
-                    },
-                  ));
-                },
-                child: const Text("Next"))
+              onPressed: () {
+                Navigator.push(context, MaterialPageRoute(
+                  builder: (context) {
+                    return const MediaPlayer();
+                  },
+                ));
+              },
+              child: const Text("Next"),
+            ),
+            TextButton(
+              onPressed: () async {
+                final ImagePicker picker = ImagePicker();
+                final XFile? galleryVideo =
+                    await picker.pickVideo(source: ImageSource.gallery);
+                if (galleryVideo != null &&
+                    await File(galleryVideo.path).exists()) {
+                  Directory appDirectory =
+                      await getApplicationDocumentsDirectory();
+                  Directory hiddenVideoDirectory =
+                      await Directory("${appDirectory.path}/.videos").create();
+                  File file = await File(galleryVideo!.path)
+                      .copy(
+                          "${hiddenVideoDirectory.path}/${galleryVideo.path.split("/").last}")
+                      .then((value) async {
+                    print(value.path);
+
+                    return value;
+                  });
+                  print("FILE WRITE DONE ${file.path}");
+                  if (await file.exists()) {
+                    await File(galleryVideo.path).delete();
+                  }
+                  print("FILE Deleted ${file.path}");
+                } else {
+                  showSnackBarWithText(_keyScaffold.currentState,
+                      "We can't find any video file in selection!");
+                }
+                /*File("${appDirectory.path}/${galleryVideo!.path.split("/").last}.txt")
+                    .writeAsString(base64.encode(
+                        await (File(galleryVideo!.path)).readAs()));*/
+              },
+              child: const Text("Secure Folder"),
+            ),
           ],
         ),
       ),

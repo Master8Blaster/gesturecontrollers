@@ -27,6 +27,12 @@ class MediaPLayerBloc extends Bloc<MediaPlayerEvents, MediaPlayerState> {
           DeviceOrientation.landscapeRight,
           DeviceOrientation.landscapeLeft,
         ]);
+        SystemChrome.setSystemUIOverlayStyle(
+          const SystemUiOverlayStyle(
+              systemNavigationBarColor: Color(0x66000000),
+              statusBarColor: Color(0x88000000),
+              statusBarBrightness: Brightness.dark),
+        );
         await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge,
             overlays: [SystemUiOverlay.top, SystemUiOverlay.bottom]);
         if (!event.isFile) {
@@ -117,10 +123,13 @@ class MediaPLayerBloc extends Bloc<MediaPlayerEvents, MediaPlayerState> {
         await playerController.play();
         emit(StateMediaPLayerLoaded());
       } else if (event is EventMediaControlsToggle) {
-        isControlsVisible = !isControlsVisible;
-        if (isControlsVisible) {
+        if (!isControlsVisible) {
           makeVisibleControllers();
+          await Future.delayed(const Duration(milliseconds: 200));
+          isControlsVisible = true;
         } else {
+          isControlsVisible = false;
+          await Future.delayed(const Duration(milliseconds: 300));
           makeInVisibleControllers();
         }
         emit(StateMediaPLayerLoaded());

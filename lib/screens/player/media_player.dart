@@ -24,7 +24,7 @@ class _MediaPLayerState extends State<MediaPlayer> {
 
   // bool isControlsAreVisible = true;
   bool stretchMode = false;
-  int fadeOutAnimationDuration = 500;
+  int fadeOutAnimationDuration = 300;
 
   Timer? timer;
 
@@ -47,10 +47,16 @@ class _MediaPLayerState extends State<MediaPlayer> {
   }
 
   @override
-  void dispose() {
+  Future<void> dispose() async {
     if (timer != null) {
       timer!.cancel();
     }
+    await SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+    ]);
+    bloc.add(EventMediaPlayerPause());
+    bloc.playerController.dispose();
+    bloc.close();
     super.dispose();
   }
 
@@ -69,45 +75,62 @@ class _MediaPLayerState extends State<MediaPlayer> {
               backgroundColor: Colors.transparent,
               extendBodyBehindAppBar: true,
               extendBody: true,
-              appBar: AppBar(
-                backgroundColor: Colors.transparent,
-                title: AnimatedOpacity(
-                  opacity: bloc.isControlsVisible ? 1.0 : 0.0,
-                  duration: Duration(milliseconds: fadeOutAnimationDuration),
-                  curve: Curves.easeInOutSine,
-                  child: const Text(
-                    "Master_hdbc_choose.mp4",
-                    style: TextStyle(fontSize: 16, color: Colors.white),
+              appBar: PreferredSize(
+                preferredSize: const Size.fromHeight(kToolbarHeight),
+                child: Container(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Color(0x88000000),
+                        Color(0x66000000),
+                        Color(0x00000000),
+                      ],
+                    ),
+                  ),
+                  child: AppBar(
+                    backgroundColor: Colors.transparent,
+                    title: AnimatedOpacity(
+                      opacity: bloc.isControlsVisible ? 1.0 : 0.0,
+                      duration:
+                          Duration(milliseconds: fadeOutAnimationDuration),
+                      curve: Curves.easeInOutSine,
+                      child: const Text(
+                        "Master_hdbc_choose.mp4",
+                        style: TextStyle(fontSize: 14, color: Colors.white),
+                      ),
+                    ),
+                    leading: !bloc.isControlsLocked
+                        ? AnimatedOpacity(
+                            opacity: bloc.isControlsVisible ? 1.0 : 0.0,
+                            duration: Duration(
+                                milliseconds: fadeOutAnimationDuration),
+                            curve: Curves.easeInOutSine,
+                            child: IconButton(
+                              icon: const Icon(
+                                Icons.arrow_back_rounded,
+                                color: Colors.white,
+                              ),
+                              onPressed: () {
+                                Navigator.pop(context);
+                              },
+                            ),
+                          )
+                        : IconButton(
+                            icon: const Icon(
+                              Icons.lock_rounded,
+                              color: Colors.white,
+                            ),
+                            onPressed: () async {
+                              bloc.isControlsVisible = true;
+                              await makeVisibleControllers();
+                              bloc.add(EventMediaPlayerLockSettings());
+                            },
+                          ),
+                    titleSpacing: 0,
                   ),
                 ),
-                leading: !bloc.isControlsLocked
-                    ? AnimatedOpacity(
-                        opacity: bloc.isControlsVisible ? 1.0 : 0.0,
-                        duration:
-                            Duration(milliseconds: fadeOutAnimationDuration),
-                        curve: Curves.easeInOutSine,
-                        child: IconButton(
-                          icon: const Icon(
-                            Icons.arrow_back_rounded,
-                            color: Colors.white,
-                          ),
-                          onPressed: () {
-                            Navigator.pop(context);
-                          },
-                        ),
-                      )
-                    : IconButton(
-                        icon: const Icon(
-                          Icons.lock_rounded,
-                          color: Colors.white,
-                        ),
-                        onPressed: () async {
-                          bloc.isControlsVisible = true;
-                          await makeVisibleControllers();
-                          bloc.add(EventMediaPlayerLockSettings());
-                        },
-                      ),
-                titleSpacing: 0,
               ),
               body: SizedBox(
                 width: MediaQuery.of(context).size.width,
@@ -139,12 +162,12 @@ class _MediaPLayerState extends State<MediaPlayer> {
                           keyScaffold: _keyScaffold,
                         ),
                       ),
-                    SafeArea(
-                      child: AnimatedOpacity(
-                        opacity: bloc.isControlsVisible ? 1.0 : 0.0,
-                        duration:
-                            Duration(milliseconds: fadeOutAnimationDuration),
-                        curve: Curves.easeInOutSine,
+                    AnimatedOpacity(
+                      opacity: bloc.isControlsVisible ? 1.0 : 0.0,
+                      duration:
+                          Duration(milliseconds: fadeOutAnimationDuration),
+                      curve: Curves.easeInOutSine,
+                      child: SafeArea(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: [
@@ -164,8 +187,11 @@ class _MediaPLayerState extends State<MediaPlayer> {
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  const SizedBox(height: 10),
-                                  CustomSlider(bloc: bloc),
+                                  const SizedBox(height: 5),
+                                  SizedBox(
+                                    height: 14,
+                                    child: CustomSlider(bloc: bloc),
+                                  ),
                                   Row(
                                     children: [
                                       IconButton(
@@ -253,7 +279,6 @@ class _MediaPLayerState extends State<MediaPlayer> {
                                       ),
                                     ],
                                   ),
-                                  const SizedBox(height: 10),
                                 ],
                               ),
                             ),
@@ -333,8 +358,9 @@ class _CustomSliderState extends State<CustomSlider> {
     return Row(
       children: [
         Text(
-          "${getTwoDigit(widget.bloc.playerController.value.position.inHours)}:${getTwoDigit(widget.bloc.playerController.value.position.inMinutes % 60)}:${getTwoDigit(widget.bloc.playerController.value.position.inSeconds % 60)}",
-          style: const TextStyle(color: Colors.white),
+          "${widget.bloc.playerController.value.position.inHours > 0 ? "${getTwoDigit(widget.bloc.playerController.value.position.inHours)}:" : ""}${getTwoDigit(widget.bloc.playerController.value.position.inMinutes % 60)}:${getTwoDigit(widget.bloc.playerController.value.position.inSeconds % 60)}",
+          style: const TextStyle(
+              color: Colors.white, fontSize: 12, fontWeight: FontWeight.w400),
         ),
         Expanded(
           child: SliderTheme(
@@ -360,8 +386,9 @@ class _CustomSliderState extends State<CustomSlider> {
           ),
         ),
         Text(
-          "${getTwoDigit(widget.bloc.playerController.value.duration.inHours)}:${getTwoDigit(widget.bloc.playerController.value.duration.inMinutes % 60)}:${getTwoDigit(widget.bloc.playerController.value.duration.inSeconds % 60)}",
-          style: const TextStyle(color: Colors.white),
+          "${widget.bloc.playerController.value.duration.inHours > 0 ? "${getTwoDigit(widget.bloc.playerController.value.duration.inHours)}:" : ""}${getTwoDigit(widget.bloc.playerController.value.duration.inMinutes % 60)}:${getTwoDigit(widget.bloc.playerController.value.duration.inSeconds % 60)}",
+          style: const TextStyle(
+              color: Colors.white, fontSize: 12, fontWeight: FontWeight.w400),
         ),
       ],
     );
