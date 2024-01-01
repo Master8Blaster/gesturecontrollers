@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:encrypt/encrypt.dart' as encrypt;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:gesturecontrollers/screens/VideoList/video_list.dart';
 import 'package:gesturecontrollers/screens/player/media_player.dart';
 import 'package:gesturecontrollers/unitlity/GloableMethods.dart';
 import 'package:image_picker/image_picker.dart';
@@ -14,6 +15,12 @@ void main() {
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
   ]);
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+        systemNavigationBarColor: Color(0x66000000),
+        statusBarColor: Color(0x88000000),
+        statusBarBrightness: Brightness.dark),
+  );
   runApp(const MyApp());
 }
 
@@ -25,7 +32,11 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF0288FE),
+          background: const Color(0xFF16202A),
+          primary: const Color(0xFF0288FE)
+        ),
         useMaterial3: true,
       ),
       home: const Master(),
@@ -54,6 +65,16 @@ class _MasterState extends State<Master> {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
+            TextButton(
+              onPressed: () {
+                Navigator.push(context, MaterialPageRoute(
+                  builder: (context) {
+                    return const VideoList();
+                  },
+                ));
+              },
+              child: const Text("List"),
+            ),
             TextButton(
               onPressed: () {
                 Navigator.push(context, MaterialPageRoute(
@@ -92,9 +113,6 @@ class _MasterState extends State<Master> {
                   showSnackBarWithText(_keyScaffold.currentState,
                       "We can't find any video file in selection!");
                 }
-                /*File("${appDirectory.path}/${galleryVideo!.path.split("/").last}.txt")
-                    .writeAsString(base64.encode(
-                        await (File(galleryVideo!.path)).readAs()));*/
               },
               child: const Text("Secure Folder"),
             ),
