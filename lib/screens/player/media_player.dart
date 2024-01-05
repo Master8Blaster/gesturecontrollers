@@ -4,15 +4,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animation_progress_bar/flutter_animation_progress_bar.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_vlc_player/flutter_vlc_player.dart';
 import 'package:gesturecontrollers/screens/player/media_player_bloc.dart';
 import 'package:gesturecontrollers/screens/player/media_player_event.dart';
 import 'package:gesturecontrollers/screens/player/media_player_stats.dart';
 import 'package:screen_brightness/screen_brightness.dart';
-import 'package:video_player/video_player.dart';
+
+// import 'package:video_player/video_player.dart';
 import 'package:volume_controller/volume_controller.dart';
 
 class MediaPlayer extends StatefulWidget {
-  const MediaPlayer({super.key});
+  bool isFile = false;
+  String path = "";
+
+  MediaPlayer({super.key, this.isFile = false, required this.path});
 
   @override
   State<MediaPlayer> createState() => _MediaPLayerState();
@@ -38,9 +43,8 @@ class _MediaPLayerState extends State<MediaPlayer> {
       });
       bloc.add(
         EventMediaPlayerInit(
-          isFile: false,
-          path:
-              "https://master8blaster.000webhostapp.com/2675c70c-ba45-4ecd-9d57-13586f13e871%20(1).mp4",
+          isFile: widget.isFile,
+          path: widget.path,
         ),
       );
     });
@@ -55,7 +59,7 @@ class _MediaPLayerState extends State<MediaPlayer> {
       DeviceOrientation.portraitUp,
     ]);
     bloc.add(EventMediaPlayerPause());
-    bloc.playerController.dispose();
+    bloc.playerController!.dispose();
     bloc.close();
     super.dispose();
   }
@@ -147,9 +151,14 @@ class _MediaPLayerState extends State<MediaPlayer> {
                         alignment: Alignment.center,
                         fit: stretchMode ? BoxFit.cover : BoxFit.contain,
                         child: SizedBox(
-                          width: bloc.playerController.value.size.width,
-                          height: bloc.playerController.value.size.height,
-                          child: VideoPlayer(bloc.playerController),
+                          width: bloc.playerController!.value.size.width,
+                          height: bloc.playerController!.value.size.height,
+                          child: VlcPlayer(
+                            controller: bloc.playerController!,
+                            aspectRatio: 16 / 9,
+                            placeholder: const Center(
+                                child: CircularProgressIndicator()),
+                          ),
                         ),
                       ),
                     ),
@@ -240,7 +249,7 @@ class _MediaPLayerState extends State<MediaPlayer> {
                                       ),
                                       IconButton(
                                         onPressed: () {
-                                          if (bloc.playerController.value
+                                          if (bloc.playerController!.value
                                               .isPlaying) {
                                             bloc.add(EventMediaPlayerPause());
                                           } else {
@@ -248,7 +257,7 @@ class _MediaPLayerState extends State<MediaPlayer> {
                                           }
                                         },
                                         icon: Icon(
-                                          bloc.playerController.value.isPlaying
+                                          bloc.playerController!.value.isPlaying
                                               ? Icons.pause_rounded
                                               : Icons.play_arrow_rounded,
                                           color: Colors.white,
@@ -286,7 +295,7 @@ class _MediaPLayerState extends State<MediaPlayer> {
                         ),
                       ),
                     ),
-                    if (bloc.playerController.value.isBuffering)
+                    if (bloc.playerController!.value.isBuffering)
                       InkWell(
                         onTap: () {},
                         child: Container(
@@ -358,7 +367,7 @@ class _CustomSliderState extends State<CustomSlider> {
     return Row(
       children: [
         Text(
-          "${widget.bloc.playerController.value.position.inHours > 0 ? "${getTwoDigit(widget.bloc.playerController.value.position.inHours)}:" : ""}${getTwoDigit(widget.bloc.playerController.value.position.inMinutes % 60)}:${getTwoDigit(widget.bloc.playerController.value.position.inSeconds % 60)}",
+          "${widget.bloc.playerController!.value.position.inHours > 0 ? "${getTwoDigit(widget.bloc.playerController!.value.position.inHours)}:" : ""}${getTwoDigit(widget.bloc.playerController!.value.position.inMinutes % 60)}:${getTwoDigit(widget.bloc.playerController!.value.position.inSeconds % 60)}",
           style: const TextStyle(
               color: Colors.white, fontSize: 12, fontWeight: FontWeight.w400),
         ),
@@ -375,9 +384,9 @@ class _CustomSliderState extends State<CustomSlider> {
             ),
             child: Slider(
               min: 0,
-              max: widget.bloc.playerController.value.duration.inMilliseconds
+              max: widget.bloc.playerController!.value.duration.inMilliseconds
                   .toDouble(),
-              value: widget.bloc.playerController.value.position.inMilliseconds
+              value: widget.bloc.playerController!.value.position.inMilliseconds
                   .toDouble(),
               onChanged: (double value) {
                 widget.bloc.add(EventMediaPlayerSeekbarDrag(value));
@@ -386,7 +395,7 @@ class _CustomSliderState extends State<CustomSlider> {
           ),
         ),
         Text(
-          "${widget.bloc.playerController.value.duration.inHours > 0 ? "${getTwoDigit(widget.bloc.playerController.value.duration.inHours)}:" : ""}${getTwoDigit(widget.bloc.playerController.value.duration.inMinutes % 60)}:${getTwoDigit(widget.bloc.playerController.value.duration.inSeconds % 60)}",
+          "${widget.bloc.playerController!.value.duration.inHours > 0 ? "${getTwoDigit(widget.bloc.playerController!.value.duration.inHours)}:" : ""}${getTwoDigit(widget.bloc.playerController!.value.duration.inMinutes % 60)}:${getTwoDigit(widget.bloc.playerController!.value.duration.inSeconds % 60)}",
           style: const TextStyle(
               color: Colors.white, fontSize: 12, fontWeight: FontWeight.w400),
         ),
@@ -442,7 +451,7 @@ class _CustomGestureDetectorState extends State<CustomGestureDetector> {
   void onHorizontalDragStart(data) {
     ySlideSkip = data.globalPosition.dx;
     seek =
-        widget.bloc.playerController.value.position.inMilliseconds.toDouble();
+        widget.bloc.playerController!.value.position.inMilliseconds.toDouble();
     setState(() {});
   }
 
@@ -451,16 +460,17 @@ class _CustomGestureDetectorState extends State<CustomGestureDetector> {
         previousSlideSkip + ((data.globalPosition.dx - ySlideSkip) / 100);
     // print("D : $d");
     if (d > 0 &&
-        d < widget.bloc.playerController.value.duration.inMilliseconds) {
+        d < widget.bloc.playerController!.value.duration.inMilliseconds) {
       seek = d;
     } else if (d < 0) {
       seek = 0;
-    } else if (d > widget.bloc.playerController.value.duration.inMilliseconds) {
-      seek =
-          widget.bloc.playerController.value.duration.inMilliseconds.toDouble();
+    } else if (d >
+        widget.bloc.playerController!.value.duration.inMilliseconds) {
+      seek = widget.bloc.playerController!.value.duration.inMilliseconds
+          .toDouble();
     }
 
-    widget.bloc.playerController
+    widget.bloc.playerController!
         .seekTo(Duration(milliseconds: (seek * 5000).toInt()));
     setState(() {});
   }

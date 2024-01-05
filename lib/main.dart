@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:gesturecontrollers/screens/VideoList/video_list.dart';
 import 'package:gesturecontrollers/screens/player/media_player.dart';
 import 'package:gesturecontrollers/unitlity/GloableMethods.dart';
+import 'package:gesturecontrollers/unitlity/colors.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -17,9 +18,10 @@ void main() {
   ]);
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
-        systemNavigationBarColor: Color(0x66000000),
-        statusBarColor: Color(0x88000000),
-        statusBarBrightness: Brightness.dark),
+      systemNavigationBarColor: colorBackGround,
+      statusBarColor: colorBackGround,
+      statusBarBrightness: Brightness.dark,
+    ),
   );
   runApp(const MyApp());
 }
@@ -33,10 +35,9 @@ class MyApp extends StatelessWidget {
       title: 'Flutter Demo',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF0288FE),
-          background: const Color(0xFF16202A),
-          primary: const Color(0xFF0288FE)
-        ),
+            seedColor: const Color(0xFF0288FE),
+            background: const Color(0xFF16202A),
+            primary: const Color(0xFF0288FE)),
         useMaterial3: true,
       ),
       home: const Master(),
@@ -79,7 +80,7 @@ class _MasterState extends State<Master> {
               onPressed: () {
                 Navigator.push(context, MaterialPageRoute(
                   builder: (context) {
-                    return const MediaPlayer();
+                    return MediaPlayer(path: "https://master8blaster.000webhostapp.com/2675c70c-ba45-4ecd-9d57-13586f13e871%20(1).mp4",);
                   },
                 ));
               },

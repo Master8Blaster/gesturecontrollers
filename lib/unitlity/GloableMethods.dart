@@ -37,3 +37,27 @@ showSnackBarWithText(ScaffoldState? scaffoldState, String strText,
     ScaffoldMessenger.of(scaffoldState.context).showSnackBar(snackBar);
   }
 }
+
+String durationToString(Duration duration) {
+  String makeTwoDigits(int i) {
+    return "${i > 9 ? i : "0$i"}";
+  }
+
+  String s = "";
+  if (duration.inHours > 0) {
+    s += "${makeTwoDigits(duration.inHours)}:";
+  }
+  if ((duration.inMinutes % 60) > 0 || duration.inHours > 0) {
+    s += "${makeTwoDigits(duration.inMinutes % 60)}:";
+  } else {
+    s += "00:";
+  }
+  if ((duration.inSeconds % 60) > 0 ||
+      (duration.inMinutes % 60) > 0 ||
+      duration.inHours > 0) {
+    s += "${makeTwoDigits(duration.inSeconds % 60)}";
+  } else {
+    s += "00";
+  }
+  return s;
+}
